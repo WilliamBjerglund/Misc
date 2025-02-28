@@ -1,12 +1,12 @@
+# TCPServer.py
 """
 TCPServer.py
 
 This script implements a TCP server that receives a file from a client.
-Changes from the original:
-- Instead of receiving just a text message, the server now receives a file in binary mode.
-- The incoming data is written to a uniquely named file ("received_file_{CONN_COUNTER}") in binary write mode.
-- Data is read in chunks of BUFFER_SIZE (1024 bytes) until the client finishes sending.
-- After receiving the complete file, the server sends a confirmation message back to the client.
+It performs the following:
+- Receives file data in binary mode in chunks (BUFFER_SIZE=1024).
+- Writes the incoming data to a uniquely named file ("received_file_{CONN_COUNTER}").
+- Sends a confirmation message back to the client once the complete file is received.
 """
 
 from socket import *
@@ -17,18 +17,18 @@ CONN_COUNTER = 0    # Connection counter.
 BUFFER_SIZE = 1024  # Buffer size for receiving data.
 
 # Create a TCP socket, bind it, and start listening for connections.
-s = socket(AF_INET, SOCK_STREAM)
-s.bind((HOST, PORT))
-s.listen(1)
+server_socket = socket(AF_INET, SOCK_STREAM)
+server_socket.bind((HOST, PORT))
+server_socket.listen(1)
 
 print('* TCP Server listening for incoming connections on port {}'.format(PORT))
 
 while True:
     CONN_COUNTER += 1
-    conn, addr = s.accept()
+    conn, addr = server_socket.accept()
     print('* Connection {} received from {}'.format(CONN_COUNTER, addr))
     
-    # Save the incoming file data to a uniquely named file.
+    # Create a uniquely named file to store the incoming data.
     filename = "received_file_{}".format(CONN_COUNTER)
     with open(filename, "wb") as file:
         while True:

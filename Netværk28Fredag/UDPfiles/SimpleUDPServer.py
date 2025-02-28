@@ -1,18 +1,30 @@
+# SimpleUDPServer.py
 """
 SimpleUDPServer.py
 
 This script listens for incoming UDP datagrams on a specified port.
-Changes from the original:
-- After receiving a message, the server sends a reply back to the client's address.
-- The reply is a simple acknowledgement message indicating that the server received the message.
+It performs the following:
+- Checks for offending words in the incoming message and replaces them with "beep".
+- Converts the (filtered) message to uppercase.
+- Sends the transformed message back to the client.
 """
 
+import re
 from socket import *
 
 HOST = ''           # Listen on all available interfaces
 PORT = 9999         # Non-privileged port
-CONN_COUNTER = 0    # Counter for connections
 BUFFER_SIZE = 1024  # Receive buffer size
+
+# List of offending words to filter (example words)
+offending_words = ["badword", "offensive"]
+
+def filter_text(text):
+    """Replace each offending word with 'beep' (case-insensitive)."""
+    for word in offending_words:
+        pattern = re.compile(re.escape(word), re.IGNORECASE)
+        text = pattern.sub("beep", text)
+    return text
 
 # Create a UDP socket
 s = socket(AF_INET, SOCK_DGRAM)
@@ -21,11 +33,16 @@ print('UDP server running...')
 print('Listening for incoming connections on port ' + str(PORT))
 
 while True:
-    CONN_COUNTER += 1
     data, client_address = s.recvfrom(BUFFER_SIZE)
-    print('* Connection {} received from {}'.format(CONN_COUNTER, client_address))
-    print('\tIncoming text:', data.decode('utf-8'))
+    original_text = data.decode('utf-8')
+    print(f'Received from {client_address}: {original_text}')
     
-    # Prepare and send a reply back to the client
-    reply_message = "Server received your message"
+    # Filter the text for offending words
+    filtered_text = filter_text(original_text)
+    
+    # Convert to uppercase for the reply
+    reply_message = filtered_text.upper()
+    
+    # Send reply back to client
     s.sendto(reply_message.encode('utf-8'), client_address)
+    print(f'Sent reply: {reply_message} to {client_address}\n')
